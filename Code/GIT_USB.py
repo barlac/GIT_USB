@@ -39,7 +39,7 @@ def uncommitted_changes(repo):
     return bool(len(changedFiles) + len(untrackedFiles))
 
 def stage_and_commit_all(repo):
-    repo.git.add(update=True)
+    print("Staging and commiting all")
     return 1
 
 def sync_folder(repo):
