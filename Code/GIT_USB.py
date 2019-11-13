@@ -1,9 +1,18 @@
+"""
+Authors: Lachlan Barnes & Freeman Porten
+Description:
+
+"""
 import os
-from git import Repo
 import threading
 
-# Global semaphore to ensure two sync folders instances are not called 
-semaphore = False
+from git import Repo
+
+# Global semaphore to ensure two sync folders instances are not called
+SEMAPHORE = False
+
+# Branch name
+BRANCH = 'master'
 
 def get_merge_results(file_list):
     """
@@ -14,7 +23,7 @@ def get_merge_results(file_list):
     version.
 
     Input: [0] file_list = A list of file names with merge conflicts.
-    Outputs [0] ...to be named... = A dictionary of file names and status of if the 
+    Outputs [0] ...to be named... = A dictionary of file names and status of if the
     current changed will be kept or overwritten by incoming changes.
     *** I/O types can change easily, just a sugestion :) ***
     """
@@ -24,7 +33,7 @@ def behind_master(repo):
     """
     Return a True/False if the local repo is behind master or not
     """
-    commits_behind_gen = repo.iter_commits('master..origin/master')
+    commits_behind_gen = repo.iter_commits('{}..origin/{}'.format(BRANCH, BRANCH))
     commits_behind = sum(1 for c2 in commits_behind_gen)
     # commits_ahead_gen = repo.iter_commits('origin/master..master')
     # commits_ahead = sum(1 for c1 in commits_ahead_gen)
@@ -34,43 +43,55 @@ def uncommitted_changes(repo):
     """
     Return a True/False if the local repo has uncommitted changes or not
     """
-    changedFiles = [ item.a_path for item in repo.index.diff(None) ]
-    untrackedFiles = repo.untracked_files
-    return bool(len(changedFiles) + len(untrackedFiles))
+    changed_files = [item.a_path for item in repo.index.diff(None)]
+    untracked_files = repo.untracked_files
+    return bool(len(changed_files) + len(untracked_files) + len(repo.index.diff("HEAD")))
 
 def stage_and_commit_all(repo):
-    print("Staging and commiting all")
-    return 1
-
-def sync_folder(repo):
     """
-    Implements the flowchart on GitHub and when called syncs the "Shared_Folder" with another other users
+    Stage and commit all
+    """
+    print("Staging and commiting all")
+    repo.git.add(A=True)
+    repo.git.commit('-m', 'test commit')
+    return True
+
+def sync_folder(repo,orgin):
+    """
+    Implements the flowchart on GitHub and syncs the "Shared_Folder" with another other users
     """
     print('Starting Sync!')
     commit_needed = uncommitted_changes(repo)
     master_ahead = behind_master(repo)
-    if(master_ahead & commit_needed):
-        stage_and_commit_all(repo)
+    if commit_needed:
+        stage_and_commit_alls(repo)
+    if(master_ahead):
+        print("pulling from master")
+        origin.pull()
     return False
 
-def mytimer(repo):
+def mytimer(repo, orgin):
     """
     Timer object that creates a thread to call the sync folder function every X seconds.
     Uses the global semaphore to ensure that only one instance of the sync_folder is created.
     """
-    global semaphore
-    threading.Timer(3.0, mytimer, args=(repo,)).start()
-    if(not semaphore):
-        semaphore = True
-        semaphore = sync_folder(repo)
+    global SEMAPHORE
+    threading.Timer(5, mytimer, args=(repo,)).start()
+    if not SEMAPHORE:
+        SEMAPHORE = True
+        SEMAPHORE = sync_folder(repo, orgin)
 
 def main():
     """
     Function Main
     """
     #Create repo object
-    repo = Repo(os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "Shared_Folder"))
-    threading.Timer(3.0, mytimer, args=(repo,)).start()
+    repo = Repo(os.path.join(os.path.dirname(os.path.dirname(
+        os.path.realpath(__file__))), "Shared_Folder"))
+    #Create origin object 
+    origin = repo.remotes.origin
+
+    threading.Timer(5.0, mytimer, args=(repo, orgin,)).start()
 
 if __name__ == '__main__':
     main()
