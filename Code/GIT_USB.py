@@ -7,7 +7,7 @@ import os
 import threading
 
 from git import Repo
-
+from git import GitCommandError
 # Global semaphore to ensure two sync folders instances are not called
 SEMAPHORE = False
 
@@ -29,14 +29,18 @@ def get_merge_results(file_list):
     """
     return {'fileA': True, 'fileB': False, 'fileC': True}
 
+def resolve_merge_results(merge_results):
+    return True
+
+
 def behind_master(repo):
     """
     Return a True/False if the local repo is behind master or not
     """
     commits_behind_gen = repo.iter_commits('{}..origin/{}'.format(BRANCH, BRANCH))
     commits_behind = sum(1 for c2 in commits_behind_gen)
-    # commits_ahead_gen = repo.iter_commits('origin/master..master')
-    # commits_ahead = sum(1 for c1 in commits_ahead_gen)
+    #commits_ahead_gen = repo.iter_commits('origin/master..master')
+    #commits_ahead = sum(1 for c1 in commits_ahead_gen)
     return bool(commits_behind)
 
 def uncommitted_changes(repo):
@@ -56,30 +60,43 @@ def stage_and_commit_all(repo):
     repo.git.commit('-m', 'test commit')
     return True
 
-def sync_folder(repo,orgin):
+def check_for_conflicts(repo, origin):
+    conflict_found = False
+    try:
+        origin.pull()
+    except GitCommandError:
+        conflict_found = True
+        pass
+    return conflict_found
+
+def sync_folder(repo, origin):
     """
     Implements the flowchart on GitHub and syncs the "Shared_Folder" with another other users
     """
     print('Starting Sync!')
+    origin.fetch()
     commit_needed = uncommitted_changes(repo)
     master_ahead = behind_master(repo)
     if commit_needed:
-        stage_and_commit_alls(repo)
-    if(master_ahead):
-        print("pulling from master")
-        origin.pull()
+        stage_and_commit_all(repo)
+    if master_ahead:
+        print("Pulling from master")
+        conflicts_found = check_for_conflicts(repo, origin)
+    if(conflicts_found):
+        merge_results = get_merge_results(repo)
+
     return False
 
-def mytimer(repo, orgin):
+def mytimer(repo, origin):
     """
     Timer object that creates a thread to call the sync folder function every X seconds.
     Uses the global semaphore to ensure that only one instance of the sync_folder is created.
     """
     global SEMAPHORE
-    threading.Timer(5, mytimer, args=(repo,)).start()
+    threading.Timer(5.0, mytimer, args=(repo, origin,)).start()
     if not SEMAPHORE:
         SEMAPHORE = True
-        SEMAPHORE = sync_folder(repo, orgin)
+        SEMAPHORE = sync_folder(repo, origin)
 
 def main():
     """
@@ -90,8 +107,7 @@ def main():
         os.path.realpath(__file__))), "Shared_Folder"))
     #Create origin object 
     origin = repo.remotes.origin
-
-    threading.Timer(5.0, mytimer, args=(repo, orgin,)).start()
+    threading.Timer(5.0, mytimer, args=(repo, origin,)).start()
 
 if __name__ == '__main__':
     main()
