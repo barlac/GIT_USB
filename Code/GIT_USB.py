@@ -1,5 +1,6 @@
 import os
 from git import Repo
+import threading
 
 def get_merge_results(file_list):
     # Freeman to potentially implement.
@@ -22,19 +23,30 @@ def behind_master(repo):
     return bool(commits_behind)
 
 def uncommitted_changes(repo):
-    print(repo.is_dirty())
     changedFiles = [ item.a_path for item in repo.index.diff(None) ]
     untrackedFiles = repo.untracked_files
     return bool(len(changedFiles) + len(untrackedFiles))
 
+def stage_and_commit_all(repo):
+    repo.git.add(update=True)
+    return 1
+
+def sync_folder(repo):
+    print('Starting Sync!')
+    commit_needed = uncommitted_changes(repo)
+    master_ahead = behind_master(repo)
+    if(master_ahead & commit_needed):
+        stage_and_commit_all(repo)
+
+def mytimer(repo):
+    # calls the sync folder function every X seconds
+    threading.Timer(3.0, mytimer, args=(repo,)).start()
+    sync_folder(repo)
 
 def main():
     #Create repo object
     repo = Repo(os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "Shared_Folder"))
-    
-    # Working out if a pull, and/or and commit is needed.
-    pull_req = behind_master(repo)
-    commit_needed = uncommitted_changes(repo)
+    threading.Timer(3.0, mytimer, args=(repo,)).start()
 
 if __name__ == '__main__':
     main()
