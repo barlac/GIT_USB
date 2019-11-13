@@ -15,6 +15,9 @@ SEMAPHORE = False
 BRANCH = 'master'
 
 def get_merge_results(file_list):
+    
+    
+    
     """
     Freeman to potentially implement.
     Description:
