@@ -246,3 +246,5 @@ TSWLatexianTemp*
 *.spl
 
 Shared_Folder
+
+Code/.vscode/

@@ -8,6 +8,7 @@ import threading
 
 from git import Repo
 from git import GitCommandError
+
 # Global semaphore to ensure two sync folders instances are not called
 SEMAPHORE = False
 
@@ -27,7 +28,8 @@ def get_merge_results(file_list):
     current changed will be kept or overwritten by incoming changes.
     *** I/O types can change easily, just a sugestion :) ***
     """
-    return {'fileA': True, 'fileB': False, 'fileC': True}
+    #return {'fileA': True, 'fileB': False, 'fileC': True}
+    return dict.fromkeys(file_list , True)
 
 def resolve_merge_results(merge_results):
     return True
@@ -61,13 +63,15 @@ def stage_and_commit_all(repo):
     return True
 
 def check_for_conflicts(repo, origin):
-    conflict_found = False
+    conflicts_found = False
     try:
         origin.pull()
     except GitCommandError:
-        conflict_found = True
+        conflicts_found = True
         pass
-    return conflict_found
+    conflicts_list = list(repo.index.unmerged_blobs().keys())
+    if(conflicts_found): print("The following files had merge conflicts; {}".format(conflicts_list))
+    return conflicts_found, conflicts_list
 
 def sync_folder(repo, origin):
     """
@@ -81,10 +85,9 @@ def sync_folder(repo, origin):
         stage_and_commit_all(repo)
     if master_ahead:
         print("Pulling from master")
-        conflicts_found = check_for_conflicts(repo, origin)
-    if(conflicts_found):
-        merge_results = get_merge_results(repo)
-
+        conflicts_found, conflicts_list = check_for_conflicts(repo, origin)
+        if(conflicts_found):
+            merge_results = get_merge_results(repo)
     return False
 
 def mytimer(repo, origin):
@@ -92,8 +95,8 @@ def mytimer(repo, origin):
     Timer object that creates a thread to call the sync folder function every X seconds.
     Uses the global semaphore to ensure that only one instance of the sync_folder is created.
     """
-    global SEMAPHORE
     threading.Timer(5.0, mytimer, args=(repo, origin,)).start()
+    global SEMAPHORE
     if not SEMAPHORE:
         SEMAPHORE = True
         SEMAPHORE = sync_folder(repo, origin)
