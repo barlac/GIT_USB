@@ -54,7 +54,7 @@ def local_behind(repo):
     """
     commits_behind_gen = repo.iter_commits('{}..origin/{}'.format(BRANCH, BRANCH))
     commits_behind = sum(1 for c2 in commits_behind_gen)
-    return bool(commits_behind)
+    return bool(commits_behind), commits_behind
 
 def local_ahead(repo):
     """
@@ -62,7 +62,7 @@ def local_ahead(repo):
     """
     commits_ahead_gen = repo.iter_commits('origin/{}..{}'.format(BRANCH, BRANCH))
     commits_ahead = sum(1 for c1 in commits_ahead_gen)
-    return bool(commits_ahead)
+    return bool(commits_ahead), commits_ahead
 
 def uncommitted_changes(repo):
     """
@@ -72,13 +72,13 @@ def uncommitted_changes(repo):
     untracked_files = repo.untracked_files
     return bool(len(changed_files) + len(untracked_files) + len(repo.index.diff("HEAD")))
 
-def stage_and_commit_all(repo):
+def stage_and_commit_all(repo, commit_message):
     """
     Stage and commit all
     """
     print("Staging and commiting all")
     repo.git.add(A=True)
-    repo.git.commit('-m', 'test commit')
+    repo.git.commit('-m', commit_message)
     return True
 
 def check_for_conflicts(repo, origin):
@@ -103,17 +103,22 @@ def sync_folder(repo, origin):
     print('\nStarting Sync!')
     origin.fetch()
     commit_needed = uncommitted_changes(repo)
-    master_ahead = local_behind(repo)
+    master_ahead, _ = local_behind(repo)
     if commit_needed:
-        stage_and_commit_all(repo)
+        stage_and_commit_all(repo, 'Change in folder')
     if master_ahead:
         print("Pulling from master")
         conflicts_found, conflicts_list = check_for_conflicts(repo, origin)
         if(conflicts_found):
             merge_results = GUI_merge_results(repo, conflicts_list)
             resolve_conflicts(repo, merge_results)
-    push_needed = local_ahead(repo)
-    if push_needed:
+            stage_and_commit_all(repo), 'Change from a merge'
+    master_behind, _ = local_ahead(repo)
+    _, x = local_behind(repo)
+    _, y = local_ahead(repo)
+    print("Behind {} commits, ahead {} commits.".format(x, y))
+
+    if master_behind:
         print("Pushing to remote")
         origin.push()
     return False
@@ -123,7 +128,7 @@ def mytimer(repo, origin):
     Timer object that creates a thread to call the sync folder function every X seconds.
     Uses the global semaphore to ensure that only one instance of the sync_folder is created.
     """
-    threading.Timer(5.0, mytimer, args=(repo, origin,)).start()
+    threading.Timer(30.0, mytimer, args=(repo, origin,)).start()
     global SEMAPHORE
     if not SEMAPHORE:
         SEMAPHORE = True
@@ -138,7 +143,7 @@ def main():
         os.path.realpath(__file__))), "Shared_Folder"))
     #Create origin object 
     origin = repo.remotes.origin
-    threading.Timer(5, mytimer, args=(repo, origin,)).start()
+    threading.Timer(30.0, mytimer, args=(repo, origin,)).start()
 
 if __name__ == '__main__':
     main()
