@@ -115,7 +115,7 @@ def sync_folder(repo, origin):
         if(conflicts_found):
             merge_results = GUI_merge_results(repo, conflicts_list)
             resolve_conflicts(repo, merge_results)
-            stage_and_commit_all(repo), 'Change from a merge'
+            stage_and_commit_all(repo, 'Change from a merge')
     master_behind, _ = local_ahead(repo)
     _, x = local_behind(repo)
     _, y = local_ahead(repo)

@@ -144,7 +144,7 @@ class Ui_MainWindow(object):
         self.take_cloud_changes_button.setText(_translate("MainWindow", "Cloud"))
         self.take_local_changes_button.setText(_translate("MainWindow", "Local"))
         self.toolBar.setWindowTitle(_translate("MainWindow", "toolBar"))
-import gui_resources_rc
+#import gui_resources_rc
 
 
 if __name__ == "__main__":
