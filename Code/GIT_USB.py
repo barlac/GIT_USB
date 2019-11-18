@@ -9,6 +9,9 @@ import threading
 from git import Repo
 from git import GitCommandError
 
+#UI importing
+from ui_test import Ui_MainWindow
+
 # Global semaphore to ensure two sync folders instances are not called
 SEMAPHORE = False
 
