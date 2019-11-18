@@ -15,7 +15,7 @@ SEMAPHORE = False
 # Branch name
 BRANCH = 'master'
 
-def get_merge_results(file_list):
+def GUI_merge_results(repo, file_list):
     
     
     
@@ -32,21 +32,31 @@ def get_merge_results(file_list):
     *** I/O types can change easily, just a sugestion :) ***
     """
     #return {'fileA': True, 'fileB': False, 'fileC': True}
-    return dict.fromkeys(file_list , True)
+    return dict.fromkeys(file_list , False)
 
-def resolve_merge_results(merge_results):
-    return True
+def resolve_conflicts(repo, merge_results):
+    unmerged_blobs = repo.index.unmerged_blobs()
+    for file in merge_results:
+        with open(file, 'wb') as fp:
+            num_blobs = len(unmerged_blobs[os.path.basename(file)])
+            if(merge_results[file]): # stay with current version
+                #Extract blob object and write to file, first square braces indicates
+                # which merge copy to take. ([0] = auto-merge, [1]= current [2] = incoming)
+                (((unmerged_blobs[os.path.basename(file)])[num_blobs-2])[1]).stream_data(fp)
+            else: # accept incoming changes
+                (((unmerged_blobs[os.path.basename(file)])[num_blobs-1])[1]).stream_data(fp)
+    print("Resolved Conflicts!")
 
 
-def behind_master(repo):
+def branch_position(repo):
     """
     Return a True/False if the local repo is behind master or not
     """
     commits_behind_gen = repo.iter_commits('{}..origin/{}'.format(BRANCH, BRANCH))
     commits_behind = sum(1 for c2 in commits_behind_gen)
-    #commits_ahead_gen = repo.iter_commits('origin/master..master')
-    #commits_ahead = sum(1 for c1 in commits_ahead_gen)
-    return bool(commits_behind)
+    commits_ahead_gen = repo.iter_commits('origin/master..master')
+    commits_ahead = sum(1 for c1 in commits_ahead_gen)
+    return bool(commits_behind), bool(commits_ahead)
 
 def uncommitted_changes(repo):
     """
@@ -72,7 +82,11 @@ def check_for_conflicts(repo, origin):
     except GitCommandError:
         conflicts_found = True
         pass
-    conflicts_list = list(repo.index.unmerged_blobs().keys())
+    # Extract absolute file paths as a list
+    conflicts_list = []
+    for file in repo.index.unmerged_blobs().values():
+        conflicts_list.append((file[1])[1].abspath)
+
     if(conflicts_found): print("The following files had merge conflicts; {}".format(conflicts_list))
     return conflicts_found, conflicts_list
 
@@ -80,17 +94,21 @@ def sync_folder(repo, origin):
     """
     Implements the flowchart on GitHub and syncs the "Shared_Folder" with another other users
     """
-    print('Starting Sync!')
+    print('\nStarting Sync!')
     origin.fetch()
     commit_needed = uncommitted_changes(repo)
-    master_ahead = behind_master(repo)
+    master_ahead, local_ahead = branch_position(repo)
     if commit_needed:
         stage_and_commit_all(repo)
     if master_ahead:
         print("Pulling from master")
         conflicts_found, conflicts_list = check_for_conflicts(repo, origin)
         if(conflicts_found):
-            merge_results = get_merge_results(repo)
+            merge_results = GUI_merge_results(repo, conflicts_list)
+            resolve_conflicts(repo, merge_results)
+    if local_ahead or conflicts_found:
+        print("Pushing to remote")
+        origin.push()
     return False
 
 def mytimer(repo, origin):
