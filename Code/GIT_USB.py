@@ -48,15 +48,21 @@ def resolve_conflicts(repo, merge_results):
     print("Resolved Conflicts!")
 
 
-def branch_position(repo):
+def local_behind(repo):
     """
     Return a True/False if the local repo is behind master or not
     """
     commits_behind_gen = repo.iter_commits('{}..origin/{}'.format(BRANCH, BRANCH))
     commits_behind = sum(1 for c2 in commits_behind_gen)
-    commits_ahead_gen = repo.iter_commits('origin/master..master')
+    return bool(commits_behind)
+
+def local_ahead(repo):
+    """
+    Return a True/False if the local repo is ahead of master or not
+    """
+    commits_ahead_gen = repo.iter_commits('origin/{}..{}'.format(BRANCH, BRANCH))
     commits_ahead = sum(1 for c1 in commits_ahead_gen)
-    return bool(commits_behind), bool(commits_ahead)
+    return bool(commits_ahead)
 
 def uncommitted_changes(repo):
     """
@@ -97,7 +103,7 @@ def sync_folder(repo, origin):
     print('\nStarting Sync!')
     origin.fetch()
     commit_needed = uncommitted_changes(repo)
-    master_ahead, local_ahead = branch_position(repo)
+    master_ahead = local_behind(repo)
     if commit_needed:
         stage_and_commit_all(repo)
     if master_ahead:
@@ -106,7 +112,8 @@ def sync_folder(repo, origin):
         if(conflicts_found):
             merge_results = GUI_merge_results(repo, conflicts_list)
             resolve_conflicts(repo, merge_results)
-    if local_ahead or conflicts_found:
+    push_needed = local_ahead(repo)
+    if push_needed:
         print("Pushing to remote")
         origin.push()
     return False
@@ -131,7 +138,7 @@ def main():
         os.path.realpath(__file__))), "Shared_Folder"))
     #Create origin object 
     origin = repo.remotes.origin
-    threading.Timer(5.0, mytimer, args=(repo, origin,)).start()
+    threading.Timer(5, mytimer, args=(repo, origin,)).start()
 
 if __name__ == '__main__':
     main()
