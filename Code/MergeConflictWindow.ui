@@ -28,12 +28,12 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_6">
     <item>
-     <widget class="QSplitter" name="splitter_2">
+     <widget class="QSplitter" name="conflicts_selection_splitter">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="QWidget" name="">
-       <layout class="QVBoxLayout" name="verticalLayout_3">
+      <widget class="QWidget" name="layoutWidget">
+       <layout class="QVBoxLayout" name="conflicts_list_vertical_layout">
         <property name="spacing">
          <number>7</number>
         </property>
@@ -41,7 +41,7 @@
          <enum>QLayout::SetDefaultConstraint</enum>
         </property>
         <item>
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="conflicts_label">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -54,7 +54,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QListWidget" name="conflicts_list">
+         <widget class="QListWidget" name="conflicts_list_wiget">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -64,7 +64,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton">
+         <widget class="QPushButton" name="finish_merge_button">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -79,9 +79,9 @@
        </layout>
       </widget>
       <widget class="QWidget" name="verticalLayoutWidget">
-       <layout class="QVBoxLayout" name="verticalLayout_5">
+       <layout class="QVBoxLayout" name="merge_selection_vertical_layout">
         <item>
-         <widget class="QLabel" name="label_3">
+         <widget class="QLabel" name="file_name_label">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -100,7 +100,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton_2">
+         <widget class="QPushButton" name="compare_files_button">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -119,7 +119,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QSplitter" name="splitter">
+         <widget class="QSplitter" name="cloud_local_splitter">
           <property name="maximumSize">
            <size>
             <width>16777215</width>
@@ -129,8 +129,8 @@
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
-          <widget class="QWidget" name="">
-           <layout class="QVBoxLayout" name="verticalLayout_4">
+          <widget class="QWidget" name="layoutWidget">
+           <layout class="QVBoxLayout" name="cloud_layout">
             <item>
              <widget class="QLabel" name="cloud_image">
               <property name="maximumSize">
@@ -154,7 +154,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="take_cloud_changes">
+             <widget class="QPushButton" name="take_cloud_changes_button">
               <property name="text">
                <string>Cloud</string>
               </property>
@@ -162,8 +162,8 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="">
-           <layout class="QVBoxLayout" name="verticalLayout_2">
+          <widget class="QWidget" name="layoutWidget">
+           <layout class="QVBoxLayout" name="local_layout">
             <item>
              <widget class="QLabel" name="local_image">
               <property name="maximumSize">
@@ -187,7 +187,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="take_local_changes">
+             <widget class="QPushButton" name="take_local_changes_button">
               <property name="text">
                <string>Local</string>
               </property>
