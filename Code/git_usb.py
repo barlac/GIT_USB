@@ -4,6 +4,7 @@ Description:
 
 """
 import os
+import sys #DELETE AFTER NEEDED
 import threading
 
 from git import Repo
@@ -54,6 +55,9 @@ def resolve_conflicts(repo, merge_results):
 def local_behind(repo):
     """
     Return a True/False if the local repo is behind master or not
+
+    FUTURE CHANGES:
+    Need to remove the local_behind output to reduce code in sync_folder
     """
     commits_behind_gen = repo.iter_commits('{}..origin/{}'.format(BRANCH, BRANCH))
     commits_behind = sum(1 for c2 in commits_behind_gen)
@@ -62,6 +66,9 @@ def local_behind(repo):
 def local_ahead(repo):
     """
     Return a True/False if the local repo is ahead of master or not
+    
+    FUTURE CHANGES:
+    Need to remove the local_ahead output to reduce code in sync_folder
     """
     commits_ahead_gen = repo.iter_commits('origin/{}..{}'.format(BRANCH, BRANCH))
     commits_ahead = sum(1 for c1 in commits_ahead_gen)
@@ -142,11 +149,12 @@ def main():
     Function Main
     """
     #Create repo object
+    print("Path = {}".format(sys.path))
     repo = Repo(os.path.join(os.path.dirname(os.path.dirname(
         os.path.realpath(__file__))), "Shared_Folder"))
     #Create origin object 
     origin = repo.remotes.origin
-    threading.Timer(30.0, mytimer, args=(repo, origin,)).start()
+    threading.Timer(20.0, mytimer, args=(repo, origin,)).start()
 
 if __name__ == '__main__':
     main()
