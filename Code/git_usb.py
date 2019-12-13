@@ -43,12 +43,16 @@ def resolve_conflicts(repo, merge_results):
     for file in merge_results:
         with open(file, 'wb') as fp:
             num_blobs = len(unmerged_blobs[os.path.basename(file)])
-            if(merge_results[file]): # stay with current version
+            if(merge_results[file]) and num_blobs < 3: # stay with current version
                 #Extract blob object and write to file, first square braces indicates
                 # which merge copy to take. ([0] = auto-merge, [1]= current [2] = incoming)
                 (((unmerged_blobs[os.path.basename(file)])[num_blobs-2])[1]).stream_data(fp)
-            else: # accept incoming changes
+            elif(not merge_results[file]) and num_blobs < 3: 
                 (((unmerged_blobs[os.path.basename(file)])[num_blobs-1])[1]).stream_data(fp)
+            elif(merge_results[file]) and num_blobs < 2: 
+                (((unmerged_blobs[os.path.basename(file)])[num_blobs-1])[1]).stream_data(fp)
+            elif(not merge_results[file]) and num_blobs < 2: 
+                (((unmerged_blobs[os.path.basename(file)])[num_blobs-0])[1]).stream_data(fp)
     print("Resolved Conflicts!")
 
 
@@ -149,7 +153,7 @@ def main():
     Function Main
     """
     #Create repo object
-    print("Path = {}".format(sys.path))
+    #print("Path = {}".format(sys.path))
     repo = Repo(os.path.join(os.path.dirname(os.path.dirname(
         os.path.realpath(__file__))), "Shared_Folder"))
     #Create origin object 
