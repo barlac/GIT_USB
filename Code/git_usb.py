@@ -11,7 +11,7 @@ from git import Repo
 from git import GitCommandError
 
 #UI importing
-from ui_test import Ui_MainWindow
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 # Global semaphore to ensure two sync folders instances are not called
 SEMAPHORE = False
@@ -19,8 +19,15 @@ SEMAPHORE = False
 # Branch name
 BRANCH = 'master'
 
+class Ui(QtWidgets.QMainWindow):
+    def __init__(self):
+        super(Ui, self).__init__() # Call the inherited classes __init__ method
+        uic.loadUi('MergeConflictWindow.ui', self) # Load the .ui file
+        self.show() # Show the GUI
+
+
+
 def GUI_merge_results(repo, file_list):
-    
     
     
     """
@@ -148,6 +155,10 @@ def main():
     """
     Function Main
     """
+    app = QtWidgets.QApplication(sys.argv)
+    window = Ui()
+    app.exec_()
+
     #Create repo object
     print("Path = {}".format(sys.path))
     repo = Repo(os.path.join(os.path.dirname(os.path.dirname(
