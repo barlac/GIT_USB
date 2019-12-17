@@ -11,7 +11,7 @@ from git import Repo
 from git import GitCommandError
 
 #UI importing
-#from ui_test import Ui_MainWindow
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 # Global semaphore to ensure two sync folders instances are not called
 SEMAPHORE = False
@@ -19,12 +19,19 @@ SEMAPHORE = False
 # Branch name
 BRANCH = 'master'
 
+class Ui(QtWidgets.QMainWindow):
+    def __init__(self):
+        super(Ui, self).__init__() # Call the inherited classes __init__ method
+        uic.loadUi('MergeConflictWindow.ui', self) # Load the .ui file
+        self.show() # Show the GUI
+
+
+
 def Destruct():
     """ Stops the program from running"""
     sys.exit()
 
 def GUI_merge_results(repo, file_list):
-    
     
     
     """
@@ -47,12 +54,16 @@ def resolve_conflicts(repo, merge_results):
     for file in merge_results:
         with open(file, 'wb') as fp:
             num_blobs = len(unmerged_blobs[os.path.basename(file)])
-            if(merge_results[file]): # stay with current version
+            if(merge_results[file]) and num_blobs < 3: # stay with current version
                 #Extract blob object and write to file, first square braces indicates
                 # which merge copy to take. ([0] = auto-merge, [1]= current [2] = incoming)
                 (((unmerged_blobs[os.path.basename(file)])[num_blobs-2])[1]).stream_data(fp)
-            else: # accept incoming changes
+            elif(not merge_results[file]) and num_blobs < 3: 
                 (((unmerged_blobs[os.path.basename(file)])[num_blobs-1])[1]).stream_data(fp)
+            elif(merge_results[file]) and num_blobs < 2: 
+                (((unmerged_blobs[os.path.basename(file)])[num_blobs-1])[1]).stream_data(fp)
+            elif(not merge_results[file]) and num_blobs < 2: 
+                (((unmerged_blobs[os.path.basename(file)])[num_blobs-0])[1]).stream_data(fp)
     print("Resolved Conflicts!")
 
 
@@ -152,6 +163,10 @@ def main():
     """
     Function Main
     """
+    app = QtWidgets.QApplication(sys.argv)
+    window = Ui()
+    app.exec_()
+
     #Create repo object
     #print("Path = {}".format(sys.path))
     repo = Repo(os.path.join(os.path.dirname(os.path.dirname(
