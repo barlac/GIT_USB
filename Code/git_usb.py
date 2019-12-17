@@ -19,6 +19,10 @@ SEMAPHORE = False
 # Branch name
 BRANCH = 'master'
 
+def Destruct():
+    """ Stops the program from running"""
+    sys.exit()
+
 def GUI_merge_results(repo, file_list):
     
     
@@ -149,7 +153,7 @@ def main():
     Function Main
     """
     #Create repo object
-    print("Path = {}".format(sys.path))
+    #print("Path = {}".format(sys.path))
     repo = Repo(os.path.join(os.path.dirname(os.path.dirname(
         os.path.realpath(__file__))), "Shared_Folder"))
     #Create origin object 
