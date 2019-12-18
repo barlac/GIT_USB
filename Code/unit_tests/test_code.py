@@ -4,6 +4,7 @@ from git import Repo
 import os
 import shutil
 import stat
+import time
 
 # Globals and constants
 REPO = None
@@ -59,6 +60,5 @@ def test_file1_method2():
 def test_file1_repo_method():
     usb1 = git_usb
     local_behind = usb1.local_behind(REPO)
-    usb1.Destruct()
-    assert local_behind != 0,"test failed" 
-
+    assert local_behind == (False,0),"test failed"
+    """usb1.Destruct()"""
