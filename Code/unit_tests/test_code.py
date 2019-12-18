@@ -16,8 +16,8 @@ def setup_module(module):
         os.mkdir(SF_repo_path)
     except FileExistsError:
         pass
+    global REPO
     REPO = Repo.clone_from(Shared_Folder_SSH, SF_repo_path)
-
 
 def teardown_module(module):
     """ teardown any state that was previously setup with a setup_module
@@ -58,7 +58,7 @@ def test_file1_method2():
 
 def test_file1_repo_method():
     usb1 = git_usb
-    local_behind = usb1.local_behind(REPO)  
+    local_behind = usb1.local_behind(REPO)
     usb1.Destruct()
     assert local_behind != 0,"test failed" 
 
