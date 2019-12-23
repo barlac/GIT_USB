@@ -13,8 +13,9 @@ from git import GitCommandError
 #UI importing
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
-# Global semaphore to ensure two sync folders instances are not called
+# Global variables
 SEMAPHORE = False
+DESTRUCT = False
 
 # Branch name
 BRANCH = 'master'
@@ -29,10 +30,9 @@ class Ui(QtWidgets.QMainWindow):
 
 def Destruct():
     """ Stops the program from running"""
-    sys.exit()
+    DESTRUCT = True
 
 def GUI_merge_results(repo, file_list):
-    
     
     """
     Freeman to potentially implement.
@@ -50,6 +50,10 @@ def GUI_merge_results(repo, file_list):
     return dict.fromkeys(file_list , False)
 
 def resolve_conflicts(repo, merge_results):
+    """
+    Takes a dictionary of merge results and changes the files in question to 
+    that of the local/remote depending on the dictionary entry.
+    """
     unmerged_blobs = repo.index.unmerged_blobs()
     for file in merge_results:
         with open(file, 'wb') as fp:
@@ -76,7 +80,7 @@ def local_behind(repo):
     """
     commits_behind_gen = repo.iter_commits('{}..origin/{}'.format(BRANCH, BRANCH))
     commits_behind = sum(1 for c2 in commits_behind_gen)
-    return bool(commits_behind), commits_behind
+    return commits_behind
 
 def local_ahead(repo):
     """
@@ -87,7 +91,7 @@ def local_ahead(repo):
     """
     commits_ahead_gen = repo.iter_commits('origin/{}..{}'.format(BRANCH, BRANCH))
     commits_ahead = sum(1 for c1 in commits_ahead_gen)
-    return bool(commits_ahead), commits_ahead
+    return commits_ahead
 
 def uncommitted_changes(repo):
     """
@@ -127,23 +131,20 @@ def sync_folder(repo, origin):
     """
     print('\nStarting Sync!')
     origin.fetch()
-    commit_needed = uncommitted_changes(repo)
-    master_ahead, _ = local_behind(repo)
-    if commit_needed:
+    if uncommitted_changes(repo):
         stage_and_commit_all(repo, 'Change in folder')
-    if master_ahead:
+    if local_behind(repo):
         print("Pulling from master")
         conflicts_found, conflicts_list = check_for_conflicts(repo, origin)
         if(conflicts_found):
             merge_results = GUI_merge_results(repo, conflicts_list)
             resolve_conflicts(repo, merge_results)
             stage_and_commit_all(repo, 'Change from a merge')
-    master_behind, _ = local_ahead(repo)
-    _, x = local_behind(repo)
-    _, y = local_ahead(repo)
+    x = local_behind(repo)
+    y = local_ahead(repo)
     print("Behind {} commits, ahead {} commits.".format(x, y))
 
-    if master_behind:
+    if local_ahead(repo):
         print("Pushing to remote")
         origin.push()
     return False
@@ -153,7 +154,8 @@ def mytimer(repo, origin):
     Timer object that creates a thread to call the sync folder function every X seconds.
     Uses the global semaphore to ensure that only one instance of the sync_folder is created.
     """
-    threading.Timer(30.0, mytimer, args=(repo, origin,)).start()
+    if not DESTRUCT:
+        threading.Timer(30.0, mytimer, args=(repo, origin,)).start()
     global SEMAPHORE
     if not SEMAPHORE:
         SEMAPHORE = True

@@ -46,19 +46,18 @@ def onerror(func, path, exc_info):
     else:
         raise
 
-def test_file1_method1():
-    x=5
-    y=6
-    assert x+1 == y, "test failed"
-    assert x == y, "test failed"
+def test_general():
+    usb1 = git_usb
+    assert usb1.local_behind(REPO) == 0,"test failed, local_behind != 0"
+    assert usb1.local_ahead(REPO) == 0,"test failed, local_ahead != 0"
+    with open(SF_repo_path, "w+") as file_1:
+        file_1.write("This is a line of text to test")
+    REPO.git.add(A=True)
+    REPO.git.commit('-m', commit_message)
 
-def test_file1_method2():
-    x=5
-    y=6
-    assert x+1 == y, "test failed" 
 
 def test_file1_repo_method():
     usb1 = git_usb
     local_behind = usb1.local_behind(REPO)
-    assert local_behind == (False,0),"test failed"
-    """usb1.Destruct()"""
+    assert local_behind == 0,"test failed"
+    #usb1.Destruct()
