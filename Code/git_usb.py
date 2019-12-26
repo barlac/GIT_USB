@@ -23,10 +23,8 @@ BRANCH = 'master'
 class Ui(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui, self).__init__() # Call the inherited classes __init__ method
-        uic.loadUi('MergeConflictWindow.ui', self) # Load the .ui file
+        uic.loadUi(os.path.join(os.path.dirname(__file__), 'MergeConflictWindow.ui'), self) # Load the .ui file
         self.show() # Show the GUI
-
-
 
 def Destruct():
     """ Stops the program from running"""
@@ -161,7 +159,7 @@ def mytimer(repo, origin):
         SEMAPHORE = True
         SEMAPHORE = sync_folder(repo, origin)
 
-def main():
+def main(repo_path):
     """
     Function Main
     """
@@ -170,7 +168,6 @@ def main():
     app.exec_()
 
     #Create repo object
-    #print("Path = {}".format(sys.path))
     repo = Repo(os.path.join(os.path.dirname(os.path.dirname(
         os.path.realpath(__file__))), "Shared_Folder"))
     #Create origin object 
