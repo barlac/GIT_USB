@@ -36,10 +36,10 @@ class GitUSB:
 
 
         #Create repo object
-        repo = Repo(repo_path)
+        self.repo = Repo(repo_path)
         #Create origin object 
-        origin = repo.remotes.origin
-        self.SyncThread = threading.Timer(8.0, self.mytimer, args=(repo, origin,))
+        self.origin = self.repo.remotes.origin
+        self.SyncThread = threading.Timer(8.0, self.mytimer)
         self.SyncThread.start()
 
 
@@ -50,7 +50,7 @@ class GitUSB:
         self.DESTRUCT = True
         self.SyncThread.cancel()
 
-    def GUI_merge_results(self, repo, file_list):
+    def GUI_merge_results(self, file_list):
         
         """
         Freeman to potentially implement.
@@ -67,12 +67,12 @@ class GitUSB:
         #return {'fileA': True, 'fileB': False, 'fileC': True}
         return dict.fromkeys(file_list , False)
 
-    def resolve_conflicts(self, repo, merge_results):
+    def resolve_conflicts(self, merge_results):
         """
         Takes a dictionary of merge results and changes the files in question to 
         that of the local/remote depending on the dictionary entry.
         """
-        unmerged_blobs = repo.index.unmerged_blobs()
+        unmerged_blobs = self.repo.index.unmerged_blobs()
         for file in merge_results:
             with open(file, 'wb') as fp:
                 num_blobs = len(unmerged_blobs[os.path.basename(file)])
@@ -89,95 +89,101 @@ class GitUSB:
         print("Resolved Conflicts!")
 
 
-    def local_behind(self, repo):
+    def local_behind(self):
         """
         Return a True/False if the local repo is behind master or not
 
         FUTURE CHANGES:
         Need to remove the local_behind output to reduce code in sync_folder
         """
-        commits_behind_gen = repo.iter_commits('{}..origin/{}'.format(self.BRANCH, self.BRANCH))
+        commits_behind_gen = self.repo.iter_commits('{}..origin/{}'.format(self.BRANCH, self.BRANCH))
         commits_behind = sum(1 for c2 in commits_behind_gen)
         return commits_behind
 
-    def local_ahead(self, repo):
+    def local_ahead(self):
         """
         Return a True/False if the local repo is ahead of master or not
         
         FUTURE CHANGES:
         Need to remove the local_ahead output to reduce code in sync_folder
         """
-        commits_ahead_gen = repo.iter_commits('origin/{}..{}'.format(self.BRANCH, self.BRANCH))
+        commits_ahead_gen = self.repo.iter_commits('origin/{}..{}'.format(self.BRANCH, self.BRANCH))
         commits_ahead = sum(1 for c1 in commits_ahead_gen)
         return commits_ahead
 
-    def uncommitted_changes(self, repo):
+    def uncommitted_changes(self):
         """
         Return a True/False if the local repo has uncommitted changes or not
         """
-        changed_files = [item.a_path for item in repo.index.diff(None)]
-        untracked_files = repo.untracked_files
-        return bool(len(changed_files) + len(untracked_files) + len(repo.index.diff("HEAD")))
+        changed_files = [item.a_path for item in self.repo.index.diff(None)]
+        untracked_files = self.repo.untracked_files
+        return bool(len(changed_files) + len(untracked_files) + len(self.repo.index.diff("HEAD")))
 
-    def stage_and_commit_all(self, repo, commit_message):
+    def stage_and_commit_all(self, commit_message):
         """
         Stage and commit all
         """
         print("Staging and commiting all")
-        repo.git.add(A=True)
-        repo.git.commit('-m', commit_message)
+        self.repo.git.add(A=True)
+        self.repo.git.commit('-m', commit_message)
         return True
 
-    def check_for_conflicts(self, repo, origin):
+    def check_for_conflicts(self):
         conflicts_found = False
         try:
-            origin.pull()
+            self.origin.pull()
         except GitCommandError:
             conflicts_found = True
             pass
         # Extract absolute file paths as a list
         conflicts_list = []
-        for file in repo.index.unmerged_blobs().values():
+        for file in self.repo.index.unmerged_blobs().values():
             conflicts_list.append((file[1])[1].abspath)
 
         if(conflicts_found): print("The following files had merge conflicts; {}".format(conflicts_list))
         return conflicts_found, conflicts_list
 
-    def sync_folder(self, repo, origin):
+    def sync_folder(self):
         """
         Implements the flowchart on GitHub and syncs the "Shared_Folder" with another other users
         """
         print('\nStarting Sync!')
-        origin.fetch()
-        if self.uncommitted_changes(repo):
-            self.stage_and_commit_all(repo, 'Change in folder')
-        if self.local_behind(repo):
+        self.origin.fetch()
+        if self.uncommitted_changes():
+            self.stage_and_commit_all( 'Change in folder')
+        if self.local_behind():
             print("Pulling from master")
-            conflicts_found, conflicts_list = self.check_for_conflicts(repo, origin)
+            conflicts_found, conflicts_list = self.check_for_conflicts()
             if(conflicts_found):
-                merge_results = self.GUI_merge_results(repo, conflicts_list)
-                self.resolve_conflicts(repo, merge_results)
-                self.stage_and_commit_all(repo, 'Change from a merge')
-        x = self.local_behind(repo)
-        y = self.local_ahead(repo)
+                merge_results = self.GUI_merge_results(conflicts_list)
+                self.resolve_conflicts( merge_results)
+                self.stage_and_commit_all( 'Change from a merge')
+        x = self.local_behind()
+        y = self.local_ahead()
         print("Behind {} commits, ahead {} commits.".format(x, y))
 
-        if self.local_ahead(repo):
+        if self.local_ahead():
             print("Pushing to remote")
-            origin.push()
+            self.origin.push()
         return False
 
-    def mytimer(self, repo, origin):
+    def mytimer(self):
         """
         Timer object that creates a thread to call the sync folder function every X seconds.
         Uses the global semaphore to ensure that only one instance of the sync_folder is created.
         """
         if not self.DESTRUCT:
-            self.SyncThread = threading.Timer(8.0, self.mytimer, args=(repo, origin,))
+            self.SyncThread = threading.Timer(8.0, self.mytimer)
             self.SyncThread.start()
         if not self.SEMAPHORE:
             self.SEMAPHORE = True
-            self.SEMAPHORE = self.sync_folder(repo, origin)
+            self.SEMAPHORE = self.sync_folder()
+
+    def forkFile(self):
+        """
+        For when the user wants to solve a merge conflict by taking both copies, renaming them as specified by the user.
+        Inputs:
+        """
         
 
 if __name__ == '__main__':
