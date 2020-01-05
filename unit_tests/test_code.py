@@ -1,10 +1,14 @@
 import pytest
-from .. import git_usb
 from git import Repo
-import os
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname( os.path.realpath(__file__))))
+print(sys.path)
+from Code import git_usb
 import shutil
 import stat
 import time
+
+
 
 # Globals and constants
 REPO = None
@@ -61,7 +65,7 @@ def test_adding_a_file():
     and checking all the outputs of the functions assosiated with checking the REPO status before
     and after the file is added.
     """
-    usb1 = GitUSB(SF_repo_path)
+    usb1 = git_usb.GitUSB(SF_repo_path)
     origin = REPO.remotes.origin
     usb1.destruct()
     assert usb1.local_behind(REPO) == 0,"test failed, local_behind != 0"
@@ -70,13 +74,13 @@ def test_adding_a_file():
     if os.path.exists(os.path.join(SF_repo_path, 'test_add_file.txt')):
         # remove file and push
         os.remove(f_path)
-        git_usb.stage_and_commit_all(REPO, "UNIT TEST: Testing local ahead/behind - file delete.")
+        usb1.stage_and_commit_all(REPO, "UNIT TEST: Testing local ahead/behind - file delete.")
         print("f_path = {}".format(f_path))
         origin.push()
     with open(os.path.join(SF_repo_path, 'test_add_file.txt'), "w+") as file_1:
         file_1.write("This is a line of text to test")
     assert usb1.uncommitted_changes(REPO) == True, "test failed, testing for uncommitted changes"
-    git_usb.stage_and_commit_all(REPO, "UNIT TEST: Testing local ahead/behind.")
+    usb1.stage_and_commit_all(REPO, "UNIT TEST: Testing local ahead/behind.")
     assert usb1.local_ahead(REPO) == 1,"test failed, local_ahead != 0"
     origin.push()
     assert usb1.uncommitted_changes(REPO) == False, "test failed, testing for uncommitted changes"
@@ -84,11 +88,11 @@ def test_adding_a_file():
     assert usb1.local_ahead(REPO) == 0,"test failed, local_ahead == 0"
     
 def test_file1_repo_method():
-    usb1 = GitUSB(SF_repo_path)
+    usb1 = git_usb.GitUSB(SF_repo_path)
     local_behind = usb1.local_behind(REPO)
     assert local_behind == 0,"test failed"
 
 def test_two_git_usbs():
-    # usb1 = git_usb.main(SF_repo_path)
-    # usb2 = git_usb.main(SF_repo_path)
+    usb1 = git_usb.GitUSB(SF_repo_path)
+    usb2 = git_usb.GitUSB(SF_repo_path)
     assert True == False, "dummy failed"

@@ -13,6 +13,8 @@ from git import GitCommandError
 #UI importing
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
+
+
 class Ui(QtWidgets.QMainWindow):
         def __init__(self):
             super(Ui, self).__init__() # Call the inherited classes __init__ method
