@@ -145,7 +145,7 @@ class GitUSB:
 
     def sync_folder(self):
         """
-        Implements the flowchart on GitHub and syncs the "Shared_Folder" with another other users
+        Implements the flowchart on GitHub and syncs the "Shared_Folder" with  other users
         """
         print('\nStarting Sync!')
         self.origin.fetch()
@@ -179,11 +179,12 @@ class GitUSB:
             self.SEMAPHORE = True
             self.SEMAPHORE = self.sync_folder()
 
-    def forkFile(self):
+    def forkFile(self, file, names):
         """
         For when the user wants to solve a merge conflict by taking both copies, renaming them as specified by the user.
-        Inputs:
+        Inputs: abs path of the file with the conflict, a dictionary containing names the forked files are to be called.
         """
+
         
 
 if __name__ == '__main__':
