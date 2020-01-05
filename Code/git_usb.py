@@ -20,15 +20,30 @@ class Ui(QtWidgets.QMainWindow):
             self.show() # Show the GUI
 
 class GitUSB:
-    def __init__(self):
+    def __init__(self, repo_path):
+        #Instance variables
         self.DESTRUCT = False
         self.SEMAPHORE = False
         # Branch name
         self.BRANCH = 'master'
 
+        #UI TESTING
+        #app = QtWidgets.QApplication(sys.argv)
+        #window = Ui()
+        #app.exec_()
 
 
-    def Destruct(self):
+        #Create repo object
+        repo = Repo(repo_path)
+        #Create origin object 
+        origin = repo.remotes.origin
+        self.SyncThread = threading.Timer(8.0, self.mytimer, args=(repo, origin,))
+        self.SyncThread.start()
+
+
+
+
+    def destruct(self):
         """ Stops the program from running"""
         self.DESTRUCT = True
         self.SyncThread.cancel()
@@ -161,22 +176,7 @@ class GitUSB:
         if not self.SEMAPHORE:
             self.SEMAPHORE = True
             self.SEMAPHORE = self.sync_folder(repo, origin)
-
-    def main(self, repo_path):
-        """
-        Function Main
-        """
-        app = QtWidgets.QApplication(sys.argv)
-        window = Ui()
-        app.exec_()
-
-        #Create repo object
-        repo = Repo(repo_path)
-        #Create origin object 
-        origin = repo.remotes.origin
-        self.SyncThread = threading.Timer(8.0, self.mytimer, args=(repo, origin,))
-        self.SyncThread.start()
+        
 
 if __name__ == '__main__':
-    GitUSBInstance = GitUSB()
-    GitUSBInstance.main(os.path.join(os.path.dirname(os.path.dirname( os.path.realpath(__file__))), "Shared_Folder"))
+    GitUSBInstance = GitUSB(os.path.join(os.path.dirname(os.path.dirname( os.path.realpath(__file__))), "Shared_Folder"))

@@ -61,9 +61,9 @@ def test_adding_a_file():
     and checking all the outputs of the functions assosiated with checking the REPO status before
     and after the file is added.
     """
-    usb1 = git_usb.main(SF_repo_path)
+    usb1 = GitUSB(SF_repo_path)
     origin = REPO.remotes.origin
-    usb1.Destruct()
+    usb1.destruct()
     assert usb1.local_behind(REPO) == 0,"test failed, local_behind != 0"
     assert usb1.local_ahead(REPO) == 0,"test failed, local_ahead != 0"
     f_path = os.path.join(SF_repo_path, 'test_add_file.txt')
@@ -84,7 +84,7 @@ def test_adding_a_file():
     assert usb1.local_ahead(REPO) == 0,"test failed, local_ahead == 0"
     
 def test_file1_repo_method():
-    usb1 = git_usb.main(SF_repo_path)
+    usb1 = GitUSB(SF_repo_path)
     local_behind = usb1.local_behind(REPO)
     assert local_behind == 0,"test failed"
 
